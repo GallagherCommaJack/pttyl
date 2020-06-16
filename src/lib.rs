@@ -192,8 +192,18 @@ impl CommandExtInternal for process::Command {
                     return Err(IoErr::last_os_error());
                 }
 
-                if libc::ioctl(0, libc::TIOCSCTTY, 1) != 0 {
-                    return Err(IoErr::last_os_error());
+                #[cfg(any(target_os = "macos", target_os = "freebsd"))]
+                {
+                    if libc::ioctl(0, libc::TIOCSCTTY as u64, 1) != 0 {
+                        return Err(IoErr::last_os_error());
+                    }
+                }
+
+                #[cfg(not(any(target_os = "macos", target_os = "freebsd")))]
+                {
+                    if libc::ioctl(0, libc::TIOCSCTTY, 1) != 0 {
+                        return Err(IoErr::last_os_error());
+                    }
                 }
 
                 Ok(())
